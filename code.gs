@@ -38,11 +38,35 @@ function fetchEmailDetails(sheetUrl) {
   let emailDetails = null;
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === appName) {
-      // Construct the email body with the two links
-      const reportLink = `<a href="${sheetUrl}">${appName} Report</a>`;
-      const emailBody = `${data[i][4].replace('{link}', reportLink)}
-        \n\nRefer to LookerStudio Security Dashboard: 
-        <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a>`;
+      // Construct the hardcoded email body
+      const currentYear = new Date().getFullYear();
+      const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
+      const emailBody = `
+        Hi Team,
+
+        Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.
+
+        Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a>
+
+        Direct Report Link: <a href="${sheetUrl}">${appName} Report</a>
+
+        Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.
+
+        Just for reference, SLA & report data for these vulnerabilities based on the severity is defined as below -:
+
+        <table>
+          <tr><th>Severity</th><th>Remediation Time</th></tr>
+          <tr><td>Critical</td><td>30 days</td></tr>
+          <tr><td>High</td><td>60 days</td></tr>
+          <tr><td>Medium</td><td>90 days</td></tr>
+          <tr><td>Low</td><td>120 days</td></tr>
+        </table>
+
+        Do let us know in case of any queries.
+
+        Thanks and Regards,
+        Security Team
+      `;
 
       emailDetails = {
         to: data[i][1],
@@ -67,7 +91,7 @@ function sendReportEmail(sheetUrl, emailDetails) {
     to: emailDetails.to,
     cc: emailDetails.cc,
     subject: emailDetails.subject,
-    htmlBody: emailDetails.body
+    htmlBody: emailDetails.body // Use htmlBody for HTML content
   });
 
   return true;
