@@ -58,6 +58,14 @@
       .close-btn {
         background-color: #f44336;
       }
+
+      /* Input fields for email editing */
+      input[type="text"], textarea {
+        width: 100%;
+        padding: 5px;
+        margin: 5px 0;
+        box-sizing: border-box;
+      }
     </style>
     <script>
       // Function to handle the form submission
@@ -78,11 +86,11 @@
               return;
             }
 
-            // Display a preview of the email details in the toast
-            document.getElementById('previewTo').innerText = emailDetails.to;
-            document.getElementById('previewCc').innerText = emailDetails.cc;
-            document.getElementById('previewSubject').innerText = emailDetails.subject;
-            document.getElementById('previewBody').innerText = emailDetails.body;
+            // Display the email details in editable fields
+            document.getElementById('previewTo').value = emailDetails.to;
+            document.getElementById('previewCc').value = emailDetails.cc;
+            document.getElementById('previewSubject').value = emailDetails.subject;
+            document.getElementById('previewBody').value = emailDetails.body;
 
             // Show the email preview popup
             document.getElementById('emailPreview').style.display = 'block';
@@ -94,21 +102,37 @@
       function sendEmail() {
         const sheetUrl = document.getElementById("sheetUrl").value;
 
-        // Call the Apps Script function to send the email
+        // Capture the modified email details
+        const emailDetails = {
+          to: document.getElementById('previewTo').value,
+          cc: document.getElementById('previewCc').value,
+          subject: document.getElementById('previewSubject').value,
+          body: document.getElementById('previewBody').value
+        };
+
+        // Call the Apps Script function to send the email with updated details
         google.script.run
           .withSuccessHandler(function(result) {
             if (result) {
               // Show toast message when email is successfully sent
-              document.getElementById('toast').innerText = 'Mail Sent!';
+              document.getElementById('toast').innerText = 'Mail Sent!\nRefresh to send another mail';
               document.getElementById('toast').style.display = 'block';
               setTimeout(function() {
                 document.getElementById('toast').style.display = 'none';
               }, 3000);
+
+              // Clear the form and email preview data after sending
+              document.getElementById('sheetUrl').value = '';
+              document.getElementById('previewTo').value = '';
+              document.getElementById('previewCc').value = '';
+              document.getElementById('previewSubject').value = '';
+              document.getElementById('previewBody').value = '';
+
             } else {
               alert('Failed to send the email.');
             }
           })
-          .sendReportEmail(sheetUrl);
+          .sendReportEmail(sheetUrl, emailDetails); // Pass the updated email details
 
         // Close the email preview popup
         document.getElementById('emailPreview').style.display = 'none';
@@ -134,12 +158,15 @@
 
     <!-- Email preview popup (as toast, initially hidden) -->
     <div id="emailPreview">
-      <h2>Email Preview</h2>
-      <p><strong>To:</strong> <span id="previewTo"></span></p>
-      <p><strong>CC:</strong> <span id="previewCc"></span></p>
-      <p><strong>Subject:</strong> <span id="previewSubject"></span></p>
-      <p><strong>Body:</strong></p>
-      <pre id="previewBody"></pre>
+      <h2>Email Preview (Editable)</h2>
+      <label><strong>To:</strong></label>
+      <input type="text" id="previewTo"><br>
+      <label><strong>CC:</strong></label>
+      <input type="text" id="previewCc"><br>
+      <label><strong>Subject:</strong></label>
+      <input type="text" id="previewSubject"><br>
+      <label><strong>Body:</strong></label>
+      <textarea id="previewBody" rows="5"></textarea><br>
 
       <!-- Button to send the email -->
       <button onclick="sendEmail()">Send Email</button>
