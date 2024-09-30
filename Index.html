@@ -3,10 +3,9 @@
   <head>
     <base target="_top">
     <style>
-      /* Set the font to Trebuchet MS */
       body {
         font-family: "Trebuchet MS", sans-serif;
-        background-color: skyblue; /* Sky blue background */
+        background-color: skyblue;
         margin: 0;
         padding: 0;
         height: 100vh;
@@ -15,7 +14,6 @@
         align-items: center;
       }
 
-      /* Center the main content */
       #content {
         text-align: center;
         background-color: white;
@@ -24,7 +22,6 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
 
-      /* Style the email preview popup as a toast */
       #emailPreview, #toast {
         position: fixed;
         top: 50%;
@@ -33,17 +30,15 @@
         background-color: white;
         border-radius: 8px;
         padding: 20px;
-        width: 300px;
+        width: 400px;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         display: none;
       }
 
-      /* Style the preview fields */
       #emailPreview p {
         margin: 5px 0;
       }
 
-      /* Add a button style */
       button {
         background-color: #4CAF50;
         color: white;
@@ -54,12 +49,10 @@
         font-size: 16px;
       }
 
-      /* Close the preview */
       .close-btn {
         background-color: #f44336;
       }
 
-      /* Input fields for email editing */
       input[type="text"], textarea {
         width: 100%;
         padding: 5px;
@@ -68,17 +61,14 @@
       }
     </style>
     <script>
-      // Function to handle the form submission
       function handleSubmit() {
         const sheetUrl = document.getElementById("sheetUrl").value;
 
-        // Validate if the user entered a Google Sheet URL
         if (!sheetUrl) {
           alert('Please provide a Google Sheet URL.');
           return;
         }
 
-        // Call the Apps Script function to fetch email details and preview the email
         google.script.run
           .withSuccessHandler(function(emailDetails) {
             if (!emailDetails) {
@@ -86,23 +76,19 @@
               return;
             }
 
-            // Display the email details in editable fields
             document.getElementById('previewTo').value = emailDetails.to;
             document.getElementById('previewCc').value = emailDetails.cc;
             document.getElementById('previewSubject').value = emailDetails.subject;
             document.getElementById('previewBody').value = emailDetails.body;
 
-            // Show the email preview popup
             document.getElementById('emailPreview').style.display = 'block';
           })
-          .fetchEmailDetails(sheetUrl); // Call to the backend
+          .fetchEmailDetails(sheetUrl);
       }
 
-      // Function to send the email
       function sendEmail() {
         const sheetUrl = document.getElementById("sheetUrl").value;
 
-        // Capture the modified email details
         const emailDetails = {
           to: document.getElementById('previewTo').value,
           cc: document.getElementById('previewCc').value,
@@ -110,35 +96,29 @@
           body: document.getElementById('previewBody').value
         };
 
-        // Call the Apps Script function to send the email with updated details
         google.script.run
           .withSuccessHandler(function(result) {
             if (result) {
-              // Show toast message when email is successfully sent
               document.getElementById('toast').innerText = 'Mail Sent!\nRefresh to send another mail';
               document.getElementById('toast').style.display = 'block';
               setTimeout(function() {
                 document.getElementById('toast').style.display = 'none';
               }, 3000);
 
-              // Clear the form and email preview data after sending
               document.getElementById('sheetUrl').value = '';
               document.getElementById('previewTo').value = '';
               document.getElementById('previewCc').value = '';
               document.getElementById('previewSubject').value = '';
               document.getElementById('previewBody').value = '';
-
             } else {
               alert('Failed to send the email.');
             }
           })
-          .sendReportEmail(sheetUrl, emailDetails); // Pass the updated email details
+          .sendReportEmail(sheetUrl, emailDetails);
 
-        // Close the email preview popup
         document.getElementById('emailPreview').style.display = 'none';
       }
 
-      // Function to close the email preview toast
       function closePreview() {
         document.getElementById('emailPreview').style.display = 'none';
       }
@@ -148,15 +128,12 @@
     <div id="content">
       <h1>Email Report Sender</h1>
 
-      <!-- Input for Google Sheet Report URL -->
       <label for="sheetUrl">Enter Google Sheet Report URL:</label><br>
       <input type="text" id="sheetUrl" placeholder="Paste your Google Sheet URL here" style="width: 400px;"><br><br>
 
-      <!-- Submit button to fetch email details -->
       <button onclick="handleSubmit()">Submit</button>
     </div>
 
-    <!-- Email preview popup (as toast, initially hidden) -->
     <div id="emailPreview">
       <h2>Email Preview (Editable)</h2>
       <label><strong>To:</strong></label>
@@ -166,14 +143,12 @@
       <label><strong>Subject:</strong></label>
       <input type="text" id="previewSubject"><br>
       <label><strong>Body:</strong></label>
-      <textarea id="previewBody" rows="5"></textarea><br>
+      <textarea id="previewBody" rows="7"></textarea><br>
 
-      <!-- Button to send the email -->
       <button onclick="sendEmail()">Send Email</button>
       <button class="close-btn" onclick="closePreview()">Close</button>
     </div>
 
-    <!-- Toast message for email sent notification -->
     <div id="toast"></div>
   </body>
 </html>
