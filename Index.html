@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    function submitReport() {
+      const sheetUrl = document.getElementById('sheetUrl').value;
+
+      // Call Apps Script function to fetch recipient info and email details
+      google.script.run.withSuccessHandler(showEmailPreview).fetchEmailDetails(sheetUrl);
+    }
+
+    function showEmailPreview(emailDetails) {
+      // Show email preview in a modal
+      if (emailDetails) {
+        document.getElementById('previewTo').textContent = emailDetails.to;
+        document.getElementById('previewCc').textContent = emailDetails.cc;
+        document.getElementById('previewSubject').textContent = emailDetails.subject;
+        document.getElementById('previewBody').textContent = emailDetails.body;
+
+        document.getElementById('emailPreviewModal').style.display = 'block';
+      } else {
+        alert("No email details found for this app name.");
+      }
+    }
+
+    function sendEmail() {
+      const sheetUrl = document.getElementById('sheetUrl').value;
+
+      // Call Apps Script function to send the email
+      google.script.run.withSuccessHandler(showToast).sendReportEmail(sheetUrl);
+    }
+
+    function showToast(success) {
+      if (success) {
+        const toast = document.getElementById('toastPopup');
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      } else {
+        alert("Failed to send email.");
+      }
+    }
+  </script>
+</head>
+<body>
+  <div>
+    <label for="sheetUrl">Google Sheet Report URL:</label>
+    <input type="text" id="sheetUrl" placeholder="Enter the Google Sheet URL">
+    <button onclick="submitReport()">Submit</button>
+  </div>
+
+  <!-- Email Preview Modal -->
+  <div id="emailPreviewModal" style="display:none; border: 1px solid #ddd; padding: 10px;">
+    <h3>Email Preview</h3>
+    <p><strong>To:</strong> <span id="previewTo"></span></p>
+    <p><strong>CC:</strong> <span id="previewCc"></span></p>
+    <p><strong>Subject:</strong> <span id="previewSubject"></span></p>
+    <p><strong>Body:</strong></p>
+    <p id="previewBody"></p>
+    <button onclick="sendEmail()">Send</button>
+  </div>
+
+  <!-- Toast Popup -->
+  <div id="toastPopup" style="display:none; background: lightgreen; padding: 10px; position: fixed; top: 10px; right: 10px;">Mail Sent</div>
+</body>
+</html>
