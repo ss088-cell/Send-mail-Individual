@@ -1,15 +1,19 @@
 // Hardcoded Google Sheet ID for the recipient information (replace with your actual sheet ID)
 const RECIPIENT_SHEET_ID = 'your-hardcoded-sheet-id-here';  // Replace this with the actual sheet ID
 
-// Function to extract appName from the sheet name
+// Function to extract appName from the Google Sheet name
 function extractAppName(sheetUrl) {
   const sheet = SpreadsheetApp.openByUrl(sheetUrl);
   const sheetName = sheet.getName();
 
-  if (sheetName.startsWith("Macroscope - ")) {
-    return sheetName.replace("Macroscope - ", ""); // Extract the appName
+  // Check if the sheet name follows the format "Macroscope Scan - Teamname - appName"
+  const parts = sheetName.split(' - ');  // Split based on ' - '
+
+  if (parts.length === 3 && parts[0] === "Macroscope Scan") {
+    return parts[2]; // Return appName (the third part)
   }
-  return null;
+
+  return null; // Return null if the sheet name format doesn't match
 }
 
 // Function to fetch email details based on appName (using hardcoded sheet ID)
