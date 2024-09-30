@@ -1,65 +1,152 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <script>
-    function submitReport() {
-      const sheetUrl = document.getElementById('sheetUrl').value;
-
-      // Call Apps Script function to fetch recipient info and email details
-      google.script.run.withSuccessHandler(showEmailPreview).fetchEmailDetails(sheetUrl);
-    }
-
-    function showEmailPreview(emailDetails) {
-      // Show email preview in a modal
-      if (emailDetails) {
-        document.getElementById('previewTo').textContent = emailDetails.to;
-        document.getElementById('previewCc').textContent = emailDetails.cc;
-        document.getElementById('previewSubject').textContent = emailDetails.subject;
-        document.getElementById('previewBody').textContent = emailDetails.body;
-
-        document.getElementById('emailPreviewModal').style.display = 'block';
-      } else {
-        alert("No email details found for this app name.");
+  <head>
+    <base target="_top">
+    <style>
+      /* Set the font to Trebuchet MS */
+      body {
+        font-family: "Trebuchet MS", sans-serif;
+        background-color: skyblue; /* Sky blue background */
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
-    }
 
-    function sendEmail() {
-      const sheetUrl = document.getElementById('sheetUrl').value;
-
-      // Call Apps Script function to send the email
-      google.script.run.withSuccessHandler(showToast).sendReportEmail(sheetUrl);
-    }
-
-    function showToast(success) {
-      if (success) {
-        const toast = document.getElementById('toastPopup');
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-      } else {
-        alert("Failed to send email.");
+      /* Center the main content */
+      #content {
+        text-align: center;
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
-    }
-  </script>
-</head>
-<body>
-  <div>
-    <label for="sheetUrl">Google Sheet Report URL:</label>
-    <input type="text" id="sheetUrl" placeholder="Enter the Google Sheet URL">
-    <button onclick="submitReport()">Submit</button>
-  </div>
 
-  <!-- Email Preview Modal -->
-  <div id="emailPreviewModal" style="display:none; border: 1px solid #ddd; padding: 10px;">
-    <h3>Email Preview</h3>
-    <p><strong>To:</strong> <span id="previewTo"></span></p>
-    <p><strong>CC:</strong> <span id="previewCc"></span></p>
-    <p><strong>Subject:</strong> <span id="previewSubject"></span></p>
-    <p><strong>Body:</strong></p>
-    <p id="previewBody"></p>
-    <button onclick="sendEmail()">Send</button>
-  </div>
+      /* Style the email preview popup as a toast */
+      #emailPreview, #toast {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        width: 300px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        display: none;
+      }
 
-  <!-- Toast Popup -->
-  <div id="toastPopup" style="display:none; background: lightgreen; padding: 10px; position: fixed; top: 10px; right: 10px;">Mail Sent</div>
-</body>
+      /* Style the preview fields */
+      #emailPreview p {
+        margin: 5px 0;
+      }
+
+      /* Add a button style */
+      button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      /* Close the preview */
+      .close-btn {
+        background-color: #f44336;
+      }
+    </style>
+    <script>
+      // Function to handle the form submission
+      function handleSubmit() {
+        const sheetUrl = document.getElementById("sheetUrl").value;
+
+        // Validate if the user entered a Google Sheet URL
+        if (!sheetUrl) {
+          alert('Please provide a Google Sheet URL.');
+          return;
+        }
+
+        // Call the Apps Script function to fetch email details and preview the email
+        google.script.run
+          .withSuccessHandler(function(emailDetails) {
+            if (!emailDetails) {
+              alert('No email details found for the provided report.');
+              return;
+            }
+
+            // Display a preview of the email details in the toast
+            document.getElementById('previewTo').innerText = emailDetails.to;
+            document.getElementById('previewCc').innerText = emailDetails.cc;
+            document.getElementById('previewSubject').innerText = emailDetails.subject;
+            document.getElementById('previewBody').innerText = emailDetails.body;
+
+            // Show the email preview popup
+            document.getElementById('emailPreview').style.display = 'block';
+          })
+          .fetchEmailDetails(sheetUrl); // Call to the backend
+      }
+
+      // Function to send the email
+      function sendEmail() {
+        const sheetUrl = document.getElementById("sheetUrl").value;
+
+        // Call the Apps Script function to send the email
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (result) {
+              // Show toast message when email is successfully sent
+              document.getElementById('toast').innerText = 'Mail Sent!';
+              document.getElementById('toast').style.display = 'block';
+              setTimeout(function() {
+                document.getElementById('toast').style.display = 'none';
+              }, 3000);
+            } else {
+              alert('Failed to send the email.');
+            }
+          })
+          .sendReportEmail(sheetUrl);
+
+        // Close the email preview popup
+        document.getElementById('emailPreview').style.display = 'none';
+      }
+
+      // Function to close the email preview toast
+      function closePreview() {
+        document.getElementById('emailPreview').style.display = 'none';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="content">
+      <h1>Email Report Sender</h1>
+
+      <!-- Input for Google Sheet Report URL -->
+      <label for="sheetUrl">Enter Google Sheet Report URL:</label><br>
+      <input type="text" id="sheetUrl" placeholder="Paste your Google Sheet URL here" style="width: 400px;"><br><br>
+
+      <!-- Submit button to fetch email details -->
+      <button onclick="handleSubmit()">Submit</button>
+    </div>
+
+    <!-- Email preview popup (as toast, initially hidden) -->
+    <div id="emailPreview">
+      <h2>Email Preview</h2>
+      <p><strong>To:</strong> <span id="previewTo"></span></p>
+      <p><strong>CC:</strong> <span id="previewCc"></span></p>
+      <p><strong>Subject:</strong> <span id="previewSubject"></span></p>
+      <p><strong>Body:</strong></p>
+      <pre id="previewBody"></pre>
+
+      <!-- Button to send the email -->
+      <button onclick="sendEmail()">Send Email</button>
+      <button class="close-btn" onclick="closePreview()">Close</button>
+    </div>
+
+    <!-- Toast message for email sent notification -->
+    <div id="toast"></div>
+  </body>
 </html>
