@@ -1,180 +1,124 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {
-            font-family: 'Trebuchet MS', sans-serif;
-            background-color: skyblue;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-        input[type="text"] {
-            width: 400px;
-            padding: 10px;
-            margin: 10px 0;
-        }
-        button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            cursor: pointer;
-            background-color: green; /* Make button green */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        #emailPreview {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border: 2px solid #000;
-            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
-            width: 400px;
-            max-height: 80vh; /* Limit height to 80% of the viewport */
-            overflow-y: auto; /* Enable scrolling when content overflows */
-            border-radius: 8px;
-        }
-        .toast {
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 5px;
-            display: none;
-            text-align: center;
-            width: 250px;
-            z-index: 1000; /* Ensure it appears above other elements */
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        .refresh-link {
-            color: white; /* Change link color to white */
-            cursor: pointer;
-            text-decoration: underline;
-        }
-    </style>
-    <script>
-        // Function to handle the form submission
-        function handleSubmit() {
-            const sheetUrl = document.getElementById("sheetUrl").value;
+// Hardcoded Google Sheet ID for the recipient information (replace with your actual sheet ID)
+const RECIPIENT_SHEET_ID = 'your-hardcoded-sheet-id-here';  // Replace with actual sheet ID
 
-            // Validate if the user entered a Google Sheet URL
-            if (!sheetUrl) {
-                alert('Please provide a Google Sheet URL.');
-                return;
-            }
+// Fixed URL for HPS Security Dashboard
+const SECURITY_DASHBOARD_URL = 'https://datastudio.google.com/u/0/reporting/your-dashboard-link-here';
 
-            // Call the Apps Script function to fetch email details and preview the email
-            google.script.run
-                .withSuccessHandler(function (emailDetails) {
-                    if (!emailDetails) {
-                        alert('No email details found for the provided report.');
-                        return;
-                    }
+// Function to extract appName and teamName from the Google Sheet name
+function extractDetails(sheetUrl) {
+    try {
+        const sheet = SpreadsheetApp.openByUrl(sheetUrl);
+        const sheetName = sheet.getName();
 
-                    // Display a preview of the email details in the popup
-                    document.getElementById('previewTo').value = emailDetails.to;
-                    document.getElementById('previewCc').value = emailDetails.cc;
-                    document.getElementById('previewSubject').value = emailDetails.subject;
-                    document.getElementById('previewBody').value = emailDetails.body;
-
-                    // Show the email preview popup
-                    document.getElementById('emailPreview').style.display = 'block';
-                })
-                .fetchEmailDetails(sheetUrl); // Call to the backend
+        // Split based on '-' and extract teamName and appName
+        const parts = sheetName.split('-');
+        if (parts.length >= 6 && parts[0] === "Macroscope Scan") {
+            const teamName = parts[1].trim(); // Team Name (second part)
+            const appName = parts[2].trim(); // App Name (third part)
+            return { teamName, appName };
         }
 
-        // Function to send the email
-        function sendEmail() {
-            const to = document.getElementById("previewTo").value;
-            const cc = document.getElementById("previewCc").value;
-            const subject = document.getElementById("previewSubject").value;
-            const body = document.getElementById("previewBody").value;
-            const sheetUrl = document.getElementById("sheetUrl").value;
+        return null;
+    } catch (error) {
+        Logger.log('Error extracting details: ' + error.message);
+        return null;
+    }
+}
 
-            const emailDetails = { to, cc, subject, body };
+// Function to fetch email details based on appName (using hardcoded sheet ID)
+function fetchEmailDetails(sheetUrl) {
+    const details = extractDetails(sheetUrl);
+    if (!details) {
+        return null;
+    }
 
-            // Call the Apps Script function to send the email
-            google.script.run
-                .withSuccessHandler(function (result) {
-                    if (result) {
-                        showToast('Mail Sent!<br><span class="refresh-link" onclick="refreshPage()">Refresh the page for new email</span>');
-                    } else {
-                        alert('Failed to send the email.');
-                    }
-                })
-                .sendReportEmail(sheetUrl, emailDetails);
+    const { teamName, appName } = details;
 
-            // Clear all fields after sending
-            document.getElementById('emailPreview').style.display = 'none';
-            document.getElementById('sheetUrl').value = '';
+    // Open the specific Google Sheet using the hardcoded sheet ID for recipient data
+    const recipientSpreadsheet = SpreadsheetApp.openById(RECIPIENT_SHEET_ID);
+    const recipientSheet = recipientSpreadsheet.getSheetByName('Recipients'); // Sheet with email data
+    const data = recipientSheet.getDataRange().getValues();
+
+    let emailDetails = null;
+    for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === appName) {
+            // Construct the email body
+            const currentYear = new Date().getFullYear();
+            const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
+            
+            // Get the sheet name from the provided URL
+            const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
+            const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
+
+            const emailBody = `
+                Hi Team,<br><br>
+                Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
+                Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
+                Direct Report Link: <a href="${sheetUrl}">${userSheetName} Report</a><br><br>
+                Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
+                Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
+                <div style="margin: 0;">
+                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
+                        <tr>
+                            <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
+                            <th style="background-color: lightblue; padding: 4px; width: 120px;">Remediation Time</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid black; padding: 4px;">Critical</td>
+                            <td style="border: 1px solid black; padding: 4px;">30 days</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid black; padding: 4px;">High</td>
+                            <td style="border: 1px solid black; padding: 4px;">60 days</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid black; padding: 4px;">Medium</td>
+                            <td style="border: 1px solid black; padding: 4px;">90 days</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid black; padding: 4px;">Low</td>
+                            <td style="border: 1px solid black; padding: 4px;">120 days</td>
+                        </tr>
+                    </table>
+                </div><br><br>
+                Do let us know in case of any queries.<br><br>
+                Thanks and Regards,<br>
+                Security Team
+            `;
+
+            const reportName = `Macroscope Scan - ${teamName} - ${appName} - ${new Date().getDate()} - ${new Date().getMonth() + 1} - ${currentYear}`;
+
+            // Save the Google Sheet to the specified folder in Google Drive
+            const folderId = data[i][3]; // Assuming folder ID is in the fourth column
+            const folder = DriveApp.getFolderById(folderId);
+            const file = DriveApp.getFileById(userSpreadsheet.getId());
+            const newFile = file.makeCopy(reportName, folder);
+
+            emailDetails = {
+                to: data[i][1],
+                cc: data[i][2],
+                subject: `Mini Scan Report For ${teamName} - ${appName} - Q${quarter} - ${currentYear}`, // Updated subject line
+                body: emailBody
+            };
+            break;
         }
+    }
 
-        // Function to display toast messages
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.innerHTML = message;
-            toast.style.display = 'block';
-            // Remove auto-hide; keep the toast visible until refresh
-            // setTimeout(() => { toast.style.display = 'none'; }, 5000);
-        }
+    return emailDetails;
+}
 
-        // Function to refresh the page
-        function refreshPage() {
-            location.reload();
-        }
-    </script>
-</head>
-<body>
-    <div class="container">
-        <h1>Email Report Sender</h1>
+// Function to send the report email
+function sendReportEmail(sheetUrl, emailDetails) {
+    if (!emailDetails) {
+        return false;
+    }
 
-        <!-- Input for Google Sheet Report URL -->
-        <label for="sheetUrl">Enter Google Sheet Report URL:</label><br>
-        <input type="text" id="sheetUrl" placeholder="Paste your Google Sheet URL here"><br><br>
+    MailApp.sendEmail({
+        to: emailDetails.to,
+        cc: emailDetails.cc,
+        subject: emailDetails.subject,
+        htmlBody: emailDetails.body // Use htmlBody for HTML content
+    });
 
-        <!-- Submit button to fetch email details -->
-        <button onclick="handleSubmit()">Submit</button>
-    </div>
-
-    <!-- Email preview popup (initially hidden) -->
-    <div id="emailPreview">
-        <h2>Email Preview</h2>
-        <label>To:</label><br>
-        <input type="text" id="previewTo"><br>
-        <label>CC:</label><br>
-        <input type="text" id="previewCc"><br>
-        <label>Subject:</label><br>
-        <input type="text" id="previewSubject"><br>
-        <label>Body:</label><br>
-        <textarea id="previewBody"></textarea><br>
-
-        <!-- Button to send the email -->
-        <button onclick="sendEmail()">Send Email</button>
-    </div>
-
-    <!-- Toast notification -->
-    <div id="toast" class="toast"></div>
-</body>
-</html>
+    return true;
+}
