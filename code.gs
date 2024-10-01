@@ -4,29 +4,31 @@ const RECIPIENT_SHEET_ID = 'your-hardcoded-sheet-id-here';  // Replace with actu
 // Fixed URL for HPS Security Dashboard
 const SECURITY_DASHBOARD_URL = 'https://datastudio.google.com/u/0/reporting/your-dashboard-link-here';
 
-// Function to extract appName from the Google Sheet name
-function extractAppName(sheetUrl) {
+// Function to extract appName and teamName from the Google Sheet name
+function extractAppAndTeamName(sheetUrl) {
     try {
         const sheet = SpreadsheetApp.openByUrl(sheetUrl);  // Use openByUrl to handle the full URL
         const sheetName = sheet.getName();
 
-        // Split based on '-' and extract appName (third part)
+        // Split based on '-' and extract teamName and appName
         const parts = sheetName.split('-');
         if (parts.length >= 6 && parts[0] === "Macroscope Scan") {
-            return parts[2]; // Return appName (third part)
+            const teamName = parts[1]; // Teamname (second part)
+            const appName = parts[2]; // Appname (third part)
+            return { teamName, appName };
         }
 
         return null;
     } catch (error) {
-        Logger.log('Error extracting app name: ' + error.message);
+        Logger.log('Error extracting app and team name: ' + error.message);
         return null;
     }
 }
 
 // Function to fetch email details based on appName (using hardcoded sheet ID)
 function fetchEmailDetails(sheetUrl) {
-    const appName = extractAppName(sheetUrl);
-    if (!appName) {
+    const { teamName, appName } = extractAppAndTeamName(sheetUrl);
+    if (!appName || !teamName) {
         return null;
     }
 
@@ -41,19 +43,25 @@ function fetchEmailDetails(sheetUrl) {
             // Construct the hardcoded email body
             const currentYear = new Date().getFullYear();
             const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
-            
+
             // Get the sheet name from the provided URL
             const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
             const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
 
             const emailBody = `
                 Hi Team,<br><br>
+
                 Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
+
                 Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
+
                 Direct Report Link: <a href="${sheetUrl}">${userSheetName} Report</a><br><br>
+
                 Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
+
                 Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
-                <div style="margin: 0;">
+
+                <div style="margin: 0;"> <!-- Remove max-width to stick it to the left -->
                   <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
                     <tr>
                       <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
@@ -77,18 +85,20 @@ function fetchEmailDetails(sheetUrl) {
                     </tr>
                   </table>
                 </div><br><br>
+
                 Do let us know in case of any queries.<br><br>
+
                 Thanks and Regards,<br>
                 Security Team
             `;
 
-            // Hardcoded subject line
-            const subject = `Mini Scan Report For {Teamname} - ${appName} - Q${quarter} - ${currentYear}`;
+            // Hardcode the subject line
+            const subject = `Mini Scan Report For ${teamName} - ${appName} - Q${quarter} - ${currentYear}`;
 
             emailDetails = {
                 to: data[i][1],
                 cc: data[i][2],
-                subject: subject, // Use the new hardcoded subject
+                subject: subject, // Use hardcoded subject
                 body: emailBody
             };
             break;
