@@ -46,7 +46,7 @@ function fetchEmailDetails(sheetUrl) {
             const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
             const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
 
-          const emailBody = `
+   const emailBody = `
     Hi Team,<br><br>
 
     Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
@@ -59,27 +59,27 @@ function fetchEmailDetails(sheetUrl) {
 
     Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
 
-    <div style="max-width: 600px; margin: auto;"> <!-- Limit table width -->
-      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+    <div style="margin: 0;"> <!-- Remove max-width to stick it to the left -->
+      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
         <tr>
-          <th style="background-color: lightblue; padding: 8px; width: 80px;">Severity</th> <!-- Fixed width for the Severity column -->
-          <th style="background-color: lightblue; padding: 8px; width: 150px;">Remediation Time</th> <!-- Fixed width for the Remediation Time column -->
+          <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
+          <th style="background-color: lightblue; padding: 4px; width: 120px;">Remediation Time</th> <!-- Increased width for header -->
         </tr>
         <tr>
-          <td style="border: 1px solid black; padding: 8px;">Critical</td>
-          <td style="border: 1px solid black; padding: 8px;">30 days</td>
+          <td style="border: 1px solid black; padding: 4px;">Critical</td>
+          <td style="border: 1px solid black; padding: 4px;">30 days</td>
         </tr>
         <tr>
-          <td style="border: 1px solid black; padding: 8px;">High</td>
-          <td style="border: 1px solid black; padding: 8px;">60 days</td>
+          <td style="border: 1px solid black; padding: 4px;">High</td>
+          <td style="border: 1px solid black; padding: 4px;">60 days</td>
         </tr>
         <tr>
-          <td style="border: 1px solid black; padding: 8px;">Medium</td>
-          <td style="border: 1px solid black; padding: 8px;">90 days</td>
+          <td style="border: 1px solid black; padding: 4px;">Medium</td>
+          <td style="border: 1px solid black; padding: 4px;">90 days</td>
         </tr>
         <tr>
-          <td style="border: 1px solid black; padding: 8px;">Low</td>
-          <td style="border: 1px solid black; padding: 8px;">120 days</td>
+          <td style="border: 1px solid black; padding: 4px;">Low</td>
+          <td style="border: 1px solid black; padding: 4px;">120 days</td>
         </tr>
       </table>
     </div><br><br>
