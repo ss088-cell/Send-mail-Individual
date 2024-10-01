@@ -1,9 +1,6 @@
 // Hardcoded Google Sheet ID for the recipient information (replace with your actual sheet ID)
 const RECIPIENT_SHEET_ID = 'your-hardcoded-sheet-id-here';  // Replace with actual sheet ID
 
-// Fixed URL for HPS Security Dashboard
-const SECURITY_DASHBOARD_URL = 'https://datastudio.google.com/u/0/reporting/your-dashboard-link-here';
-
 // Function to extract appName from the Google Sheet name
 function extractAppName(sheetUrl) {
   try {
@@ -23,62 +20,60 @@ function extractAppName(sheetUrl) {
   }
 }
 
-// Function to fetch email details based on appName (using hardcoded sheet ID)
+// Function to fetch email details with hardcoded email body
 function fetchEmailDetails(sheetUrl) {
-  const appName = extractAppName(sheetUrl);
-  if (!appName) {
-    return null;
-  }
+  const quarter = "Q3"; // Modify based on the current quarter logic
+  const year = new Date().getFullYear();
 
-  // Open the specific Google Sheet using the hardcoded sheet ID for recipient data
-  const recipientSpreadsheet = SpreadsheetApp.openById(RECIPIENT_SHEET_ID);
-  const recipientSheet = recipientSpreadsheet.getSheetByName('Recipients'); // Sheet with email data
-  const data = recipientSheet.getDataRange().getValues();
+  // Hardcoded email body
+  const emailBody = `
+Hi Team,
 
-  let emailDetails = null;
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === appName) {
-      // Construct the hardcoded email body
-      const currentYear = new Date().getFullYear();
-      const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
-      const emailBody = `
-        Hi Team,<br><br>
+Kindly refer to the attached Macroscope FP analysis quarterly report for ${quarter} ${year}.
 
-        Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
+Macroscope UI Link: Refer to lookerstudio data studio has security dashboard HPS Security Dashboard (here to HPS Security Dashboard has a link to the dashboard).
 
-        Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
+Direct Report Link: Name of Google Sheet (here to Name of Google Sheet has a link to the report).
 
-        Direct Report Link: <a href="${sheetUrl}">${appName} Report</a><br><br>
+Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritising critical ones first and acknowledge this mail with further updates.
 
-        Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
+Just for reference, SLA & report data for these vulnerabilities based on the severity is defined as below:
 
-        Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
+<table style="border-collapse: collapse; width: 100%;">
+  <tr>
+    <th style="border: 1px solid black; background-color: lightblue; padding: 8px;">Severity</th>
+    <th style="border: 1px solid black; background-color: lightblue; padding: 8px;">Remediation Time</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 8px;">Critical</td>
+    <td style="border: 1px solid black; padding: 8px;">30 days</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 8px;">High</td>
+    <td style="border: 1px solid black; padding: 8px;">60 days</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 8px;">Medium</td>
+    <td style="border: 1px solid black; padding: 8px;">90 days</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 8px;">Low</td>
+    <td style="border: 1px solid black; padding: 8px;">120 days</td>
+  </tr>
+</table>
 
-        <table border="1" cellpadding="5" cellspacing="0">
-          <tr><th>Severity</th><th>Remediation Time</th></tr>
-          <tr><td>Critical</td><td>30 days</td></tr>
-          <tr><td>High</td><td>60 days</td></tr>
-          <tr><td>Medium</td><td>90 days</td></tr>
-          <tr><td>Low</td><td>120 days</td></tr>
-        </table><br><br>
+Do let us know in case of any queries.
 
-        Do let us know in case of any queries.<br><br>
+Thanks and Regards,
+Security Team
+`;
 
-        Thanks and Regards,<br>
-        Security Team
-      `;
-
-      emailDetails = {
-        to: data[i][1],
-        cc: data[i][2],
-        subject: data[i][3],
-        body: emailBody
-      };
-      break;
-    }
-  }
-
-  return emailDetails;
+  return {
+    to: "recipient@example.com", // Placeholder for email address
+    cc: "cc@example.com",         // Placeholder for CC address
+    subject: `Macroscope FP Analysis Report for ${quarter} ${year}`,
+    body: emailBody
+  };
 }
 
 // Function to send the report email
@@ -91,7 +86,7 @@ function sendReportEmail(sheetUrl, emailDetails) {
     to: emailDetails.to,
     cc: emailDetails.cc,
     subject: emailDetails.subject,
-    htmlBody: emailDetails.body // Use htmlBody for HTML content
+    htmlBody: emailDetails.body
   });
 
   return true;
