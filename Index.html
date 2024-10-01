@@ -27,14 +27,11 @@
             padding: 10px 20px;
             margin-top: 10px;
             cursor: pointer;
-            background-color: green; /* Changed to green */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: darkgreen; /* Darker green on hover */
+            background-color: green; /* Green button color */
+            color: white; /* White text */
+            border: none; /* Remove default border */
+            border-radius: 5px; /* Rounded corners */
+            font-size: 16px; /* Increased font size */
         }
         #emailPreview {
             display: none;
@@ -63,7 +60,6 @@
             display: none;
             text-align: center;
             width: 250px;
-            z-index: 1000; /* Make sure it's on top */
         }
         textarea {
             width: 100%;
@@ -72,9 +68,9 @@
             margin-top: 10px;
         }
         .refresh-link {
-            color: white; /* Link color white */
-            cursor: pointer;
+            color: white; /* White color for refresh link */
             text-decoration: underline;
+            cursor: pointer;
         }
     </style>
     <script>
@@ -139,7 +135,7 @@
             const toast = document.getElementById('toast');
             toast.innerHTML = message;
             toast.style.display = 'block';
-            // Keep the toast visible until the page is refreshed
+            setTimeout(() => { toast.style.display = 'none'; }, 5000);
         }
 
         // Function to refresh the page
