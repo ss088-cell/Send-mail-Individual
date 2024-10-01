@@ -46,7 +46,7 @@ function fetchEmailDetails(sheetUrl) {
             const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
             const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
 
-            const emailBody = `
+          const emailBody = `
     Hi Team,<br><br>
 
     Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
@@ -62,8 +62,8 @@ function fetchEmailDetails(sheetUrl) {
     <div style="max-width: 600px; margin: auto;"> <!-- Limit table width -->
       <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
         <tr>
-          <th style="background-color: lightblue; padding: 8px;">Severity</th>
-          <th style="background-color: lightblue; padding: 8px; width: 150px;">Remediation Time</th> <!-- Fixed width for the second column -->
+          <th style="background-color: lightblue; padding: 8px; width: 80px;">Severity</th> <!-- Fixed width for the Severity column -->
+          <th style="background-color: lightblue; padding: 8px; width: 150px;">Remediation Time</th> <!-- Fixed width for the Remediation Time column -->
         </tr>
         <tr>
           <td style="border: 1px solid black; padding: 8px;">Critical</td>
@@ -89,6 +89,7 @@ function fetchEmailDetails(sheetUrl) {
     Thanks and Regards,<br>
     Security Team
 `;
+
 
 
 
