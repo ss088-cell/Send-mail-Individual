@@ -27,11 +27,14 @@
             padding: 10px 20px;
             margin-top: 10px;
             cursor: pointer;
-            background-color: green; /* Make button green */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
+            background-color: green; /* Green background for the button */
+            color: white; /* White text for the button */
+            border: none; /* Remove border */
+            border-radius: 5px; /* Rounded corners */
+            transition: background-color 0.3s; /* Smooth transition */
+        }
+        button:hover {
+            background-color: darkgreen; /* Darker green on hover */
         }
         #emailPreview {
             display: none;
@@ -60,7 +63,6 @@
             display: none;
             text-align: center;
             width: 250px;
-            z-index: 1000; /* Ensure it appears above other elements */
         }
         textarea {
             width: 100%;
@@ -69,7 +71,7 @@
             margin-top: 10px;
         }
         .refresh-link {
-            color: white; /* Change link color to white */
+            color: white; /* White color for the link */
             cursor: pointer;
             text-decoration: underline;
         }
@@ -136,8 +138,7 @@
             const toast = document.getElementById('toast');
             toast.innerHTML = message;
             toast.style.display = 'block';
-            // Remove auto-hide; keep the toast visible until refresh
-            // setTimeout(() => { toast.style.display = 'none'; }, 5000);
+            // Keep the toast visible until the page is refreshed
         }
 
         // Function to refresh the page
