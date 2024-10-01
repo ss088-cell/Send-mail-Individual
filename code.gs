@@ -1,3 +1,28 @@
+// Hardcoded Google Sheet ID for the recipient information (replace with your actual sheet ID)
+const RECIPIENT_SHEET_ID = 'your-hardcoded-sheet-id-here';  // Replace with actual sheet ID
+
+// Fixed URL for HPS Security Dashboard
+const SECURITY_DASHBOARD_URL = 'https://datastudio.google.com/u/0/reporting/your-dashboard-link-here';
+
+// Function to extract appName from the Google Sheet name
+function extractAppName(sheetUrl) {
+  try {
+    const sheet = SpreadsheetApp.openByUrl(sheetUrl);  // Use openByUrl to handle the full URL
+    const sheetName = sheet.getName();
+
+    // Split based on '-' and extract appName (third part)
+    const parts = sheetName.split('-');
+    if (parts.length >= 6 && parts[0] === "Macroscope Scan") {
+      return parts[2]; // Return appName (third part)
+    }
+
+    return null;
+  } catch (error) {
+    Logger.log('Error extracting app name: ' + error.message);
+    return null;
+  }
+}
+
 // Function to fetch email details based on appName (using hardcoded sheet ID)
 function fetchEmailDetails(sheetUrl) {
   const appName = extractAppName(sheetUrl);
@@ -72,4 +97,20 @@ function fetchEmailDetails(sheetUrl) {
   }
 
   return emailDetails;
+}
+
+// Function to send the report email
+function sendReportEmail(sheetUrl, emailDetails) {
+  if (!emailDetails) {
+    return false;
+  }
+
+  MailApp.sendEmail({
+    to: emailDetails.to,
+    cc: emailDetails.cc,
+    subject: emailDetails.subject,
+    htmlBody: emailDetails.body // Use htmlBody for HTML content
+  });
+
+  return true;
 }
