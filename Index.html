@@ -65,6 +65,7 @@
       .refresh-link {
         color: blue;
         cursor: pointer;
+        text-decoration: underline;
       }
     </style>
     <script>
@@ -112,7 +113,7 @@
         google.script.run
           .withSuccessHandler(function (result) {
             if (result) {
-              showToast('Mail Sent!<br><span class="refresh-link" onclick="refreshPage()">Click here to send another mail</span>');
+              showToast('Mail Sent!<br><span class="refresh-link" onclick="refreshPage()">Refresh the page for new email</span>');
             } else {
               alert('Failed to send the email.');
             }
@@ -153,23 +154,20 @@
     <!-- Email preview popup (initially hidden) -->
     <div id="emailPreview">
       <h2>Email Preview</h2>
-      <label for="previewTo">To:</label><br>
-      <input type="text" id="previewTo"><br><br>
-
-      <label for="previewCc">CC:</label><br>
-      <input type="text" id="previewCc"><br><br>
-
-      <label for="previewSubject">Subject:</label><br>
-      <input type="text" id="previewSubject"><br><br>
-
-      <label for="previewBody">Body:</label><br>
+      <label>To:</label><br>
+      <input type="text" id="previewTo"><br>
+      <label>CC:</label><br>
+      <input type="text" id="previewCc"><br>
+      <label>Subject:</label><br>
+      <input type="text" id="previewSubject"><br>
+      <label>Body:</label><br>
       <textarea id="previewBody"></textarea><br>
 
       <!-- Button to send the email -->
       <button onclick="sendEmail()">Send Email</button>
     </div>
 
-    <!-- Toast message popup for mail sent and refresh link -->
+    <!-- Toast notification -->
     <div id="toast" class="toast"></div>
   </body>
 </html>
