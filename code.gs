@@ -112,7 +112,9 @@ function fetchEmailDetails(sheetUrl) {
             // Get the folder ID from the recipient data sheet (4th column)
             const folderId = data[i][3]; 
             const fileName = userSheetName; // Name as the original sheet
-            const blob = DriveApp.getFileById(sheetUrl.split("/d/")[1].split("/")[0]).getBlob(); // Get the blob of the file
+
+            // Get the blob of the file (no conversion to PDF)
+            const blob = userSpreadsheet.getBlob(); // Get the Google Sheet as blob
 
             // Save the file in the specified folder with the original name
             DriveApp.getFolderById(folderId).createFile(blob.setName(fileName)); 
