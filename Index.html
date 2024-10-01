@@ -1,173 +1,173 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <style>
-      body {
-        font-family: 'Trebuchet MS', sans-serif;
-        background-color: skyblue;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-      }
-      .container {
-        text-align: center;
-        background-color: white;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-      }
-      input[type="text"] {
-        width: 400px;
-        padding: 10px;
-        margin: 10px 0;
-      }
-      button {
-        padding: 10px 20px;
-        margin-top: 10px;
-        cursor: pointer;
-      }
-      #emailPreview {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        padding: 20px;
-        border: 2px solid #000;
-        box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
-        width: 400px;
-        max-height: 80vh; /* Limit height to 80% of the viewport */
-        overflow-y: auto; /* Enable scrolling when content overflows */
-        border-radius: 8px;
-      }
-      .toast {
-        background-color: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 15px;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        border-radius: 5px;
-        display: none;
-        text-align: center;
-        width: 250px;
-      }
-      textarea {
-        width: 100%;
-        height: 150px;
-        padding: 10px;
-        margin-top: 10px;
-      }
-      .refresh-link {
-        color: blue;
-        cursor: pointer;
-        text-decoration: underline;
-      }
+        body {
+            font-family: 'Trebuchet MS', sans-serif;
+            background-color: skyblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 400px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #emailPreview {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 2px solid #000;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+            width: 500px; /* Set a wider preview width */
+            max-height: 80vh; /* Limit height to 80% of the viewport */
+            overflow-y: auto; /* Enable scrolling when content overflows */
+            border-radius: 8px;
+        }
+        .toast {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+            width: 250px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .refresh-link {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
     <script>
-      // Function to handle the form submission
-      function handleSubmit() {
-        const sheetUrl = document.getElementById("sheetUrl").value;
+        // Function to handle the form submission
+        function handleSubmit() {
+            const sheetUrl = document.getElementById("sheetUrl").value;
 
-        // Validate if the user entered a Google Sheet URL
-        if (!sheetUrl) {
-          alert('Please provide a Google Sheet URL.');
-          return;
+            // Validate if the user entered a Google Sheet URL
+            if (!sheetUrl) {
+                alert('Please provide a Google Sheet URL.');
+                return;
+            }
+
+            // Call the Apps Script function to fetch email details and preview the email
+            google.script.run
+                .withSuccessHandler(function (emailDetails) {
+                    if (!emailDetails) {
+                        alert('No email details found for the provided report.');
+                        return;
+                    }
+
+                    // Display a preview of the email details in the popup
+                    document.getElementById('previewTo').value = emailDetails.to;
+                    document.getElementById('previewCc').value = emailDetails.cc;
+                    document.getElementById('previewSubject').value = emailDetails.subject;
+                    document.getElementById('previewBody').value = emailDetails.body;
+
+                    // Show the email preview popup
+                    document.getElementById('emailPreview').style.display = 'block';
+                })
+                .fetchEmailDetails(sheetUrl); // Call to the backend
         }
 
-        // Call the Apps Script function to fetch email details and preview the email
-        google.script.run
-          .withSuccessHandler(function (emailDetails) {
-            if (!emailDetails) {
-              alert('No email details found for the provided report.');
-              return;
-            }
+        // Function to send the email
+        function sendEmail() {
+            const to = document.getElementById("previewTo").value;
+            const cc = document.getElementById("previewCc").value;
+            const subject = document.getElementById("previewSubject").value;
+            const body = document.getElementById("previewBody").value;
+            const sheetUrl = document.getElementById("sheetUrl").value;
 
-            // Display a preview of the email details in the popup
-            document.getElementById('previewTo').value = emailDetails.to;
-            document.getElementById('previewCc').value = emailDetails.cc;
-            document.getElementById('previewSubject').value = emailDetails.subject;
-            document.getElementById('previewBody').value = emailDetails.body;
+            const emailDetails = { to, cc, subject, body };
 
-            // Show the email preview popup
-            document.getElementById('emailPreview').style.display = 'block';
-          })
-          .fetchEmailDetails(sheetUrl); // Call to the backend
-      }
+            // Call the Apps Script function to send the email
+            google.script.run
+                .withSuccessHandler(function (result) {
+                    if (result) {
+                        showToast('Mail Sent!<br><span class="refresh-link" onclick="refreshPage()">Refresh the page for new email</span>');
+                    } else {
+                        alert('Failed to send the email.');
+                    }
+                })
+                .sendReportEmail(sheetUrl, emailDetails);
 
-      // Function to send the email
-      function sendEmail() {
-        const to = document.getElementById("previewTo").value;
-        const cc = document.getElementById("previewCc").value;
-        const subject = document.getElementById("previewSubject").value;
-        const body = document.getElementById("previewBody").value;
-        const sheetUrl = document.getElementById("sheetUrl").value;
+            // Clear all fields after sending
+            document.getElementById('emailPreview').style.display = 'none';
+            document.getElementById('sheetUrl').value = '';
+        }
 
-        const emailDetails = { to, cc, subject, body };
+        // Function to display toast messages
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = message;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 5000);
+        }
 
-        // Call the Apps Script function to send the email
-        google.script.run
-          .withSuccessHandler(function (result) {
-            if (result) {
-              showToast('Mail Sent!<br><span class="refresh-link" onclick="refreshPage()">Refresh the page for new email</span>');
-            } else {
-              alert('Failed to send the email.');
-            }
-          })
-          .sendReportEmail(sheetUrl, emailDetails);
-
-        // Clear all fields after sending
-        document.getElementById('emailPreview').style.display = 'none';
-        document.getElementById('sheetUrl').value = '';
-      }
-
-      // Function to display toast messages
-      function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.innerHTML = message;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 5000);
-      }
-
-      // Function to refresh the page
-      function refreshPage() {
-        location.reload();
-      }
+        // Function to refresh the page
+        function refreshPage() {
+            location.reload();
+        }
     </script>
-  </head>
-  <body>
+</head>
+<body>
     <div class="container">
-      <h1>Email Report Sender</h1>
+        <h1>Email Report Sender</h1>
 
-      <!-- Input for Google Sheet Report URL -->
-      <label for="sheetUrl">Enter Google Sheet Report URL:</label><br>
-      <input type="text" id="sheetUrl" placeholder="Paste your Google Sheet URL here"><br><br>
+        <!-- Input for Google Sheet Report URL -->
+        <label for="sheetUrl">Enter Google Sheet Report URL:</label><br>
+        <input type="text" id="sheetUrl" placeholder="Paste your Google Sheet URL here"><br><br>
 
-      <!-- Submit button to fetch email details -->
-      <button onclick="handleSubmit()">Submit</button>
+        <!-- Submit button to fetch email details -->
+        <button onclick="handleSubmit()">Submit</button>
     </div>
 
     <!-- Email preview popup (initially hidden) -->
     <div id="emailPreview">
-      <h2>Email Preview</h2>
-      <label>To:</label><br>
-      <input type="text" id="previewTo"><br>
-      <label>CC:</label><br>
-      <input type="text" id="previewCc"><br>
-      <label>Subject:</label><br>
-      <input type="text" id="previewSubject"><br>
-      <label>Body:</label><br>
-      <textarea id="previewBody"></textarea><br>
+        <h2>Email Preview</h2>
+        <label>To:</label><br>
+        <input type="text" id="previewTo"><br>
+        <label>CC:</label><br>
+        <input type="text" id="previewCc"><br>
+        <label>Subject:</label><br>
+        <input type="text" id="previewSubject"><br>
+        <label>Body:</label><br>
+        <textarea id="previewBody"></textarea><br>
 
-      <!-- Button to send the email -->
-      <button onclick="sendEmail()">Send Email</button>
+        <!-- Button to send the email -->
+        <button onclick="sendEmail()">Send Email</button>
     </div>
 
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
-  </body>
+</body>
 </html>
