@@ -4,35 +4,31 @@ const RECIPIENT_SHEET_ID = 'your-hardcoded-sheet-id-here';  // Replace with actu
 // Fixed URL for HPS Security Dashboard
 const SECURITY_DASHBOARD_URL = 'https://datastudio.google.com/u/0/reporting/your-dashboard-link-here';
 
-// Function to extract appName and teamName from the Google Sheet name
-function extractDetails(sheetUrl) {
+// Function to extract appName from the Google Sheet name
+function extractAppName(sheetUrl) {
     try {
-        const sheet = SpreadsheetApp.openByUrl(sheetUrl);
+        const sheet = SpreadsheetApp.openByUrl(sheetUrl);  // Use openByUrl to handle the full URL
         const sheetName = sheet.getName();
 
-        // Split based on '-' and extract teamName and appName
+        // Split based on '-' and extract appName (third part)
         const parts = sheetName.split('-');
         if (parts.length >= 6 && parts[0] === "Macroscope Scan") {
-            const teamName = parts[1]; // Team name
-            const appName = parts[2]; // App name
-            return { teamName, appName };
+            return parts[2]; // Return appName (third part)
         }
 
         return null;
     } catch (error) {
-        Logger.log('Error extracting details: ' + error.message);
+        Logger.log('Error extracting app name: ' + error.message);
         return null;
     }
 }
 
 // Function to fetch email details based on appName (using hardcoded sheet ID)
 function fetchEmailDetails(sheetUrl) {
-    const details = extractDetails(sheetUrl);
-    if (!details) {
+    const appName = extractAppName(sheetUrl);
+    if (!appName) {
         return null;
     }
-
-    const { teamName, appName } = details;
 
     // Open the specific Google Sheet using the hardcoded sheet ID for recipient data
     const recipientSpreadsheet = SpreadsheetApp.openById(RECIPIENT_SHEET_ID);
@@ -42,25 +38,34 @@ function fetchEmailDetails(sheetUrl) {
     let emailDetails = null;
     for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appName) {
-            // Construct the subject line
+            // Construct the hardcoded email body
+            const currentYear = new Date().getFullYear();
+            const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
             const currentDate = new Date();
-            const day = currentDate.getDate();
-            const month = currentDate.getMonth() + 1; // Months are zero-indexed
-            const year = currentDate.getFullYear();
-            const subject = `Mini Scan Report For ${teamName} - ${appName} - ${day} - ${month} - ${year}`;
+            const day = String(currentDate.getDate()).padStart(2, '0'); // Get day
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Get month (0-indexed)
 
             // Get the sheet name from the provided URL
             const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
             const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
 
+            // Create subject line
+            const subjectLine = `Mini Scan Report For ${data[i][0]} - ${appName} - Q${quarter} - ${currentYear}`;
+
             const emailBody = `
                 Hi Team,<br><br>
-                Kindly refer to the attached Macroscope FP analysis quarterly report.<br><br>
+
+                Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
+
                 Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
+
                 Direct Report Link: <a href="${sheetUrl}">${userSheetName} Report</a><br><br>
+
                 Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
+
                 Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
-                <div style="margin: 0;">
+
+                <div style="margin: 0;"> <!-- Remove max-width to stick it to the left -->
                     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
                         <tr>
                             <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
@@ -84,29 +89,27 @@ function fetchEmailDetails(sheetUrl) {
                         </tr>
                     </table>
                 </div><br><br>
+
                 Do let us know in case of any queries.<br><br>
+
                 Thanks and Regards,<br>
                 Security Team
             `;
 
-            // Prepare the email details
+            // Get the folder ID from the recipient sheet
+            const folderId = data[i][4]; // Assuming the folder ID is in the fifth column
+
+            // Save the sheet as a copy to the specified folder with the original name
+            const file = DriveApp.getFileById(userSpreadsheet.getId());
+            const folder = DriveApp.getFolderById(folderId);
+            const newFile = file.makeCopy(userSheetName, folder); // Keep the same name
+
             emailDetails = {
-                to: data[i][1] || "", // Ensure it's not undefined
-                cc: data[i][2] || "", // Ensure it's not undefined
-                subject: subject,
+                to: data[i][1],
+                cc: data[i][2],
+                subject: subjectLine,
                 body: emailBody
             };
-
-            // Save the report to the specified location
-            const folderId = data[i][3]; // Folder ID from the recipient sheet
-            if (folderId) {
-                const reportFile = DriveApp.getFileById(userSpreadsheet.getId());
-                const folder = DriveApp.getFolderById(folderId); // Ensure this is a valid folder ID
-                reportFile.makeCopy(`Macroscope Scan - ${teamName} - ${appName} - ${day} - ${month} - ${year}`, folder);
-            } else {
-                Logger.log('No folder ID specified for saving the report.');
-            }
-
             break;
         }
     }
@@ -120,17 +123,12 @@ function sendReportEmail(sheetUrl, emailDetails) {
         return false;
     }
 
-    try {
-        MailApp.sendEmail({
-            to: emailDetails.to,
-            cc: emailDetails.cc,
-            subject: emailDetails.subject,
-            htmlBody: emailDetails.body // Use htmlBody for HTML content
-        });
-    } catch (error) {
-        Logger.log('Error sending email: ' + error.message);
-        return false;
-    }
+    MailApp.sendEmail({
+        to: emailDetails.to,
+        cc: emailDetails.cc,
+        subject: emailDetails.subject,
+        htmlBody: emailDetails.body // Use htmlBody for HTML content
+    });
 
     return true;
 }
