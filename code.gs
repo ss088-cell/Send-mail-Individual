@@ -38,18 +38,19 @@ function fetchEmailDetails(sheetUrl) {
     let emailDetails = null;
     for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appName) {
+            // Construct the email subject line
+            const currentYear = new Date().getFullYear();
+            const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
+            const teamName = data[i][0]; // Assuming teamName is in the first column
+
+            // Construct subject line using teamName, appName, quarter, and year
+            const subjectLine = `Mini Scan Report For ${teamName} - ${appName} - Q${quarter} - ${currentYear}`;
+
             // Get the sheet name from the provided URL
             const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
             const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
 
-            const currentYear = new Date().getFullYear();
-            const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
-            const teamName = userSheetName.split('-')[1]; // Extract team name from sheet name
-
-            // Construct the subject line
-            const subject = `Macroscope Scan - ${teamName} - ${appName} - ${new Date().getDate()} - ${new Date().getMonth() + 1} - ${currentYear}`;
-
-            // Construct the email body
+            // Prepare the email body
             const emailBody = `
             Hi Team,<br><br>
 
@@ -64,28 +65,28 @@ function fetchEmailDetails(sheetUrl) {
             Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
 
             <div style="margin: 0;"> <!-- Remove max-width to stick it to the left -->
-                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
-                    <tr>
-                        <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
-                        <th style="background-color: lightblue; padding: 4px; width: 120px;">Remediation Time</th> <!-- Increased width for header -->
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid black; padding: 4px;">Critical</td>
-                        <td style="border: 1px solid black; padding: 4px;">30 days</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid black; padding: 4px;">High</td>
-                        <td style="border: 1px solid black; padding: 4px;">60 days</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid black; padding: 4px;">Medium</td>
-                        <td style="border: 1px solid black; padding: 4px;">90 days</td>
-                    </tr>
-                    <tr>
-                        <td style="border: 1px solid black; padding: 4px;">Low</td>
-                        <td style="border: 1px solid black; padding: 4px;">120 days</td>
-                    </tr>
-                </table>
+              <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
+                <tr>
+                  <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
+                  <th style="background-color: lightblue; padding: 4px; width: 120px;">Remediation Time</th> <!-- Increased width for header -->
+                </tr>
+                <tr>
+                  <td style="border: 1px solid black; padding: 4px;">Critical</td>
+                  <td style="border: 1px solid black; padding: 4px;">30 days</td>
+                </tr>
+                <tr>
+                  <td style="border: 1px solid black; padding: 4px;">High</td>
+                  <td style="border: 1px solid black; padding: 4px;">60 days</td>
+                </tr>
+                <tr>
+                  <td style="border: 1px solid black; padding: 4px;">Medium</td>
+                  <td style="border: 1px solid black; padding: 4px;">90 days</td>
+                </tr>
+                <tr>
+                  <td style="border: 1px solid black; padding: 4px;">Low</td>
+                  <td style="border: 1px solid black; padding: 4px;">120 days</td>
+                </tr>
+              </table>
             </div><br><br>
 
             Do let us know in case of any queries.<br><br>
@@ -94,10 +95,17 @@ function fetchEmailDetails(sheetUrl) {
             Security Team
             `;
 
+            // Fetch folder ID from the 4th column
+            const folderId = data[i][3]; // Assuming folder ID is in the 4th column
+
+            // Save the report in the specified folder
+            const file = DriveApp.getFileById(sheetUrl.match(/[-\w]{25,}/)); // Get the file ID from the URL
+            const newFile = file.makeCopy(`Macroscope Scan - ${teamName} - ${appName} - ${new Date().getDate()} - ${new Date().getMonth() + 1} - ${currentYear}`, DriveApp.getFolderById(folderId));
+
             emailDetails = {
                 to: data[i][1],
                 cc: data[i][2],
-                subject: subject,
+                subject: subjectLine,
                 body: emailBody
             };
             break;
@@ -107,27 +115,18 @@ function fetchEmailDetails(sheetUrl) {
     return emailDetails;
 }
 
-// Function to send the report email and save the report to Google Drive
+// Function to send the report email
 function sendReportEmail(sheetUrl, emailDetails) {
     if (!emailDetails) {
         return false;
     }
 
-    // Send the email
     MailApp.sendEmail({
         to: emailDetails.to,
         cc: emailDetails.cc,
         subject: emailDetails.subject,
         htmlBody: emailDetails.body // Use htmlBody for HTML content
     });
-
-    // Save the Google Sheet to the specified folder
-    const folderId = '1A2B3C4D5E6F7G8H9I0J'; // Replace with your actual folder ID
-    const folder = DriveApp.getFolderById(folderId);
-    const file = DriveApp.getFileById(SpreadsheetApp.openByUrl(sheetUrl).getId());
-    
-    // Make a copy of the file in the specified folder without changing its name
-    file.makeCopy(file.getName(), folder); 
 
     return true;
 }
