@@ -42,29 +42,29 @@ function fetchEmailDetails(sheetUrl) {
       const currentYear = new Date().getFullYear();
       const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
       const emailBody = `
-        Hi Team,
+        Hi Team,<br><br>
 
-        Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.
+        Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
 
-        Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a>
+        Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
 
-        Direct Report Link: <a href="${sheetUrl}">${appName} Report</a>
+        Direct Report Link: <a href="${sheetUrl}">${appName} Report</a><br><br>
 
-        Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.
+        Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
 
-        Just for reference, SLA & report data for these vulnerabilities based on the severity is defined as below -:
+        Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
 
-        <table>
+        <table border="1" cellpadding="5" cellspacing="0">
           <tr><th>Severity</th><th>Remediation Time</th></tr>
           <tr><td>Critical</td><td>30 days</td></tr>
           <tr><td>High</td><td>60 days</td></tr>
           <tr><td>Medium</td><td>90 days</td></tr>
           <tr><td>Low</td><td>120 days</td></tr>
-        </table>
+        </table><br><br>
 
-        Do let us know in case of any queries.
+        Do let us know in case of any queries.<br><br>
 
-        Thanks and Regards,
+        Thanks and Regards,<br>
         Security Team
       `;
 
