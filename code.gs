@@ -38,76 +38,66 @@ function fetchEmailDetails(sheetUrl) {
     let emailDetails = null;
     for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appName) {
-            // Construct the hardcoded email body
-            const currentYear = new Date().getFullYear();
-            const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
-            const currentDate = new Date();
-            const day = String(currentDate.getDate()).padStart(2, '0'); // Get day
-            const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Get month (0-indexed)
-
             // Get the sheet name from the provided URL
             const userSpreadsheet = SpreadsheetApp.openByUrl(sheetUrl); // Open user-provided sheet
             const userSheetName = userSpreadsheet.getName(); // Get the name of the user's sheet
 
-            // Create subject line
-            const subjectLine = `Mini Scan Report For ${data[i][0]} - ${appName} - Q${quarter} - ${currentYear}`;
+            const currentYear = new Date().getFullYear();
+            const quarter = Math.ceil((new Date().getMonth() + 1) / 3);
+            const teamName = userSheetName.split('-')[1]; // Extract team name from sheet name
 
+            // Construct the subject line
+            const subject = `Macroscope Scan - ${teamName} - ${appName} - ${new Date().getDate()} - ${new Date().getMonth() + 1} - ${currentYear}`;
+
+            // Construct the email body
             const emailBody = `
-                Hi Team,<br><br>
+            Hi Team,<br><br>
 
-                Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
+            Kindly refer to the attached Macroscope FP analysis quarterly report for Q${quarter} ${currentYear}.<br><br>
 
-                Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
+            Macroscope UI Link: Refer to LookerStudio data studio has security dashboard <a href="${SECURITY_DASHBOARD_URL}">HPS Security Dashboard</a><br>
 
-                Direct Report Link: <a href="${sheetUrl}">${userSheetName} Report</a><br><br>
+            Direct Report Link: <a href="${sheetUrl}">${userSheetName} Report</a><br><br>
 
-                Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
+            Request you to create an action plan accordingly to remediate the vulnerabilities listed by prioritizing critical ones first and acknowledge this mail with further updates.<br><br>
 
-                Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
+            Just for references, SLA & report data for these vulnerabilities based on the severity is defined as below:<br>
 
-                <div style="margin: 0;"> <!-- Remove max-width to stick it to the left -->
-                    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
-                        <tr>
-                            <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
-                            <th style="background-color: lightblue; padding: 4px; width: 120px;">Remediation Time</th>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid black; padding: 4px;">Critical</td>
-                            <td style="border: 1px solid black; padding: 4px;">30 days</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid black; padding: 4px;">High</td>
-                            <td style="border: 1px solid black; padding: 4px;">60 days</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid black; padding: 4px;">Medium</td>
-                            <td style="border: 1px solid black; padding: 4px;">90 days</td>
-                        </tr>
-                        <tr>
-                            <td style="border: 1px solid black; padding: 4px;">Low</td>
-                            <td style="border: 1px solid black; padding: 4px;">120 days</td>
-                        </tr>
-                    </table>
-                </div><br><br>
+            <div style="margin: 0;"> <!-- Remove max-width to stick it to the left -->
+                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: auto; margin: 0;">
+                    <tr>
+                        <th style="background-color: lightblue; padding: 4px; width: 80px;">Severity</th>
+                        <th style="background-color: lightblue; padding: 4px; width: 120px;">Remediation Time</th> <!-- Increased width for header -->
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black; padding: 4px;">Critical</td>
+                        <td style="border: 1px solid black; padding: 4px;">30 days</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black; padding: 4px;">High</td>
+                        <td style="border: 1px solid black; padding: 4px;">60 days</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black; padding: 4px;">Medium</td>
+                        <td style="border: 1px solid black; padding: 4px;">90 days</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black; padding: 4px;">Low</td>
+                        <td style="border: 1px solid black; padding: 4px;">120 days</td>
+                    </tr>
+                </table>
+            </div><br><br>
 
-                Do let us know in case of any queries.<br><br>
+            Do let us know in case of any queries.<br><br>
 
-                Thanks and Regards,<br>
-                Security Team
+            Thanks and Regards,<br>
+            Security Team
             `;
-
-            // Get the folder ID from the recipient sheet
-            const folderId = data[i][4]; // Assuming the folder ID is in the fifth column
-
-            // Save the sheet as a copy to the specified folder with the original name
-            const file = DriveApp.getFileById(userSpreadsheet.getId());
-            const folder = DriveApp.getFolderById(folderId);
-            const newFile = file.makeCopy(userSheetName, folder); // Keep the same name
 
             emailDetails = {
                 to: data[i][1],
                 cc: data[i][2],
-                subject: subjectLine,
+                subject: subject,
                 body: emailBody
             };
             break;
@@ -117,18 +107,27 @@ function fetchEmailDetails(sheetUrl) {
     return emailDetails;
 }
 
-// Function to send the report email
+// Function to send the report email and save the report to Google Drive
 function sendReportEmail(sheetUrl, emailDetails) {
     if (!emailDetails) {
         return false;
     }
 
+    // Send the email
     MailApp.sendEmail({
         to: emailDetails.to,
         cc: emailDetails.cc,
         subject: emailDetails.subject,
         htmlBody: emailDetails.body // Use htmlBody for HTML content
     });
+
+    // Save the Google Sheet to the specified folder
+    const folderId = '1A2B3C4D5E6F7G8H9I0J'; // Replace with your actual folder ID
+    const folder = DriveApp.getFolderById(folderId);
+    const file = DriveApp.getFileById(SpreadsheetApp.openByUrl(sheetUrl).getId());
+    
+    // Make a copy of the file in the specified folder without changing its name
+    file.makeCopy(file.getName(), folder); 
 
     return true;
 }
