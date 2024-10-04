@@ -125,32 +125,25 @@ function fetchEmailDetails(sheetUrl) {
     return emailDetails;
 }
 
-// Function to send the report email
+// Function to send the report email from DL
 function sendReportEmail(sheetUrl, emailDetails) {
     if (!emailDetails) {
         return false;
     }
 
+    // Change this to your Distribution List email
+    const DL_EMAIL = "your-dl-email@example.com"; 
+
     MailApp.sendEmail({
         to: emailDetails.to,
         cc: emailDetails.cc,
         subject: emailDetails.subject,
-        htmlBody: emailDetails.body // Use htmlBody for HTML content
+        htmlBody: emailDetails.body, // Use htmlBody for HTML content
+        replyTo: DL_EMAIL // Ensures replies are sent to the DL
     });
 
     return true;
-}
-
-// Function to send the report email
-function sendReportEmail(sheetUrl, emailDetails) {
-    if (!emailDetails) {
-        return false;
-    }
-
-    MailApp.sendEmail({
-        to: emailDetails.to,
-        cc: emailDetails.cc,
-        subject: emailDetails.subject,
+}ailDetails.subject,
         htmlBody: emailDetails.body // Use htmlBody for HTML content
     });
 
