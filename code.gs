@@ -140,3 +140,19 @@ function sendReportEmail(sheetUrl, emailDetails) {
 
     return true;
 }
+
+// Function to send the report email
+function sendReportEmail(sheetUrl, emailDetails) {
+    if (!emailDetails) {
+        return false;
+    }
+
+    MailApp.sendEmail({
+        to: emailDetails.to,
+        cc: emailDetails.cc,
+        subject: emailDetails.subject,
+        htmlBody: emailDetails.body // Use htmlBody for HTML content
+    });
+
+    return true;
+}
